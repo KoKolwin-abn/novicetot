@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novice TOT Leaderboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --gold: #fdcb6e;
+            --silver: #dfe6e9;
+            --bronze: #e17055;
+            --learning: #00b894;
+            --completed: #0984e3;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Padauk', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--dark);
+            margin: 1rem 0;
+            font-size: 1.8rem;
+        }
+        
+        .leaderboard {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            overflow-x: auto;
+        }
+        
+        .header, .student-row {
+            display: grid;
+            grid-template-columns: 50px minmax(120px, 1fr) 80px 100px;
+            min-width: 400px;
+            padding: 0.8rem 0.5rem;
+            align-items: center;
+        }
+        
+        .header {
+            font-weight: bold;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(255,255,255,0.5);
+        }
+        
+        .student-row {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        
+        .student-row:last-child {
+            border-bottom: none;
+        }
+        
+        .student-row:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        
+        .rank {
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .student-info {
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.8rem;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .name {
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .score {
+            font-weight: bold;
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        .status {
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin-left: 0.5rem;
+        }
+        
+        .status-learning {
+            background-color: var(--learning);
+            color: white;
+        }
+        
+        .status-completed {
+            background-color: var(--completed);
+            color: white;
+        }
+        
+        /* Top 3 styling */
+        .top-1 { background: rgba(253,203,110,0.2); }
+        .top-2 { background: rgba(223,230,233,0.2); }
+        .top-3 { background: rgba(225,112,85,0.2); }
+        
+        .top-1 .rank { color: var(--gold); }
+        .top-2 .rank { color: var(--silver); }
+        .top-3 .rank { color: var(--bronze); }
+        
+        /* Portrait Mode Optimization */
+        @media (max-width: 500px) {
+            h1 {
+                font-size: 1.5rem;
+                margin: 0.5rem 0;
+            }
+            
+            .leaderboard {
+                padding: 0.5rem;
+            }
+            
+            .header, .student-row {
+                grid-template-columns: 40px minmax(100px, 1fr) 70px 90px;
+                padding: 0.6rem 0.3rem;
+                font-size: 0.9rem;
+            }
+            
+            .avatar {
+                width: 36px;
+                height: 36px;
+                margin-right: 0.6rem;
+            }
+            
+            .status {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.5rem;
+            }
+        }
+        
+        /* Landscape Mode */
+        @media (min-width: 501px) and (max-width: 800px) {
+            .header, .student-row {
+                grid-template-columns: 45px minmax(150px, 1fr) 75px 95px;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Novice TOT Leaderboard</h1>
+        
+        <div class="leaderboard">
+            <div class="header">
+                <div>Rank</div>
+                <div>Teacher's Name'</div>
+                <div>Score</div>
+                <div>Status</div>
+            </div>
+            
+            <div id="students-container">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Sheets URL
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbFjawpHgVlrxKqlNPI8ZwH2lhKXSBIYrNMr7fIOeRSnQg_AAMnZ-TVpZtQERaTHwCdXzKk0tYCTts/pub?output=csv';
+        const DEFAULT_AVATAR = 'https://via.placeholder.com/150?text=No+Photo';
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', fetchData);
+
+        async function fetchData() {
+            try {
+                const response = await fetch(SHEET_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const csvData = await response.text();
+                const students = parseCSV(csvData);
+                
+                if (students.length === 0) {
+                    throw new Error('No student data found in the sheet');
+                }
+                
+                // Sort by score descending
+                students.sort((a, b) => b.score - a.score);
+                
+                displayStudents(students);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('students-container').innerHTML = `
+                    <div style="padding: 1rem; text-align: center; color: red;">
+                        အချက်အလက်များဖတ်ရှုရာတွင် အမှားတစ်ခုဖြစ်နေပါသည်။<br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.split('\n').filter(line => line.trim() !== '');
+            const students = [];
+            
+            // Skip header row if exists
+            const startRow = lines[0].includes('Name') ? 1 : 0;
+            
+            for (let i = startRow; i < lines.length; i++) {
+                try {
+                    // Handle quoted values in CSV
+                    const values = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                    
+                    if (values.length >= 5) {
+                        const id = values[0].replace(/"/g, '').trim();
+                        const photo = values[1].replace(/"/g, '').trim();
+                        const name = values[2].replace(/"/g, '').trim() || 'အမည်မရှိ';
+                        const score = parseInt(values[3].replace(/"/g, '').trim()) || 0;
+                        const status = values[4].replace(/"/g, '').trim().toLowerCase();
+                        
+                        students.push({ id, photo, name, score, status });
+                    }
+                } catch (e) {
+                    console.error(`Error parsing line ${i + 1}:`, lines[i], e);
+                }
+            }
+            
+            return students;
+        }
+
+        function displayStudents(students) {
+            const container = document.getElementById('students-container');
+            container.innerHTML = '';
+            
+            students.forEach((student, index) => {
+                const studentEl = document.createElement('div');
+                studentEl.className = `student-row ${index < 3 ? 'top-'+(index+1) : ''}`;
+                
+                // Process photo URL (convert Google Drive link if needed)
+                let photoUrl = student.photo;
+                if (photoUrl.includes('drive.google.com')) {
+                    const match = photoUrl.match(/\/d\/([^\/]+)/);
+                    if (match && match[1]) {
+                        photoUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                    }
+                }
+                
+                // Process status
+                let statusText, statusClass;
+                if (student.status === 'completed' || student.score >= 100) {
+                    statusText = 'အောင်မြင်ပြီး';
+                    statusClass = 'status-completed';
+                } else {
+                    statusText = 'သင်ယူဆဲ';
+                    statusClass = 'status-learning';
+                }
+                
+                studentEl.innerHTML = `
+                    <div class="rank">${index + 1}</div>
+                    <div class="student-info">
+                        <img src="${photoUrl}" alt="${student.name}" class="avatar" 
+                             onerror="this.src='${DEFAULT_AVATAR}'">
+                        <div class="name">${student.name}</div>
+                    </div>
+                    <div class="score">${student.score}</div>
+                    <div class="status ${statusClass}">${statusText}</div>
+                `;
+                
+                container.appendChild(studentEl);
+            });
+        }
+    </script>
+</body>
+</html>
